@@ -1,2 +1,77 @@
-.venv/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
 venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Secrets and credentials
+*.json
+*.key
+*.pem
+*.p12
+*.pfx
+github-actions-key.json
+gcp-key.json
+service-account*.json
+credentials*.json
+
+# Model files (optional - comment out if you want to track them)
+# *.joblib
+# *.pkl
+# *.model
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Docker
+.dockerignore
+
+# Kubernetes secrets
+*secret*.yaml
+*secret*.yml
