@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: iris-prediction-api-service
+  labels:
+    app: iris-prediction-api
+spec:
+  type: LoadBalancer
+  selector:
+    app: iris-prediction-api
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8000

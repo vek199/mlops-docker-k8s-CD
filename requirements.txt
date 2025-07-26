@@ -1,0 +1,11 @@
+# Core API framework
+fastapi
+uvicorn[standard]
+
+# Machine Learning
+scikit-learn
+pandas
+joblib
+
+# Data validation
+pydantic

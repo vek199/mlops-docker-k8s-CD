@@ -1,0 +1,62 @@
+name: MLOps CI/CD Pipeline - Iris Prediction API
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GKE_CLUSTER: iris-prediction-cluster
+  GKE_ZONE: us-central1-a
+  GCP_REGION: us-central1
+  ARTIFACT_REGISTRY_REPO: iris-prediction-repo
+  IMAGE_NAME: iris-prediction-api
+  
+jobs:
+  setup-build-publish-deploy:
+    name: Setup, Build, Publish, and Deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to GCP
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Install gke-gcloud-auth-plugin
+      run: gcloud components install gke-gcloud-auth-plugin
+
+    - name: Configure Docker
+      run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+
+    - name: Define image path
+      run: echo "IMAGE_PATH=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
+
+    - name: Build and Push Docker image
+      run: |
+        docker build . --tag "${{ env.IMAGE_PATH }}:${{ github.sha }}" --tag "${{ env.IMAGE_PATH }}:latest"
+        docker push "${{ env.IMAGE_PATH }}:${{ github.sha }}"
+        docker push "${{ env.IMAGE_PATH }}:latest"
+
+    - name: Deploy to GKE
+      run: |
+        gcloud container clusters get-credentials $GKE_CLUSTER --zone $GKE_ZONE
+        
+        # Update deployment with new image
+        sed -i "s|image:.*|image: ${{ env.IMAGE_PATH }}:${{ github.sha }}|" kubernetes/deployment.yml
+        
+        # Apply Kubernetes configurations
+        kubectl apply -f kubernetes/
+        
+        # Wait for deployment to complete
+        kubectl rollout status deployment/iris-prediction-api --timeout=300s
