@@ -10,11 +10,34 @@ spec:
     kind: Deployment
     name: iris-prediction-api
   minReplicas: 2
-  maxReplicas: 10
+  maxReplicas: 15  # Increased for handling higher concurrent load
   metrics:
   - type: Resource
     resource:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 50
+        averageUtilization: 60  # Slightly higher threshold for more responsive scaling
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 70
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 30  # Faster scale up
+      policies:
+      - type: Percent
+        value: 100  # Double the replicas
+        periodSeconds: 30
+      - type: Pods
+        value: 3    # Or add 3 pods at once
+        periodSeconds: 30
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 120  # Slower scale down to handle traffic spikes
+      policies:
+      - type: Percent
+        value: 50   # Remove 50% of replicas
+        periodSeconds: 60
