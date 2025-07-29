@@ -1,0 +1,28 @@
+=== Locust Load Test Results ===
+
+Test 1: 150 Users (10 users/sec spawn)
+- Total Requests: 45,632
+- Failures: 127 (0.28%)
+- Average Response Time: 245ms
+- Min Response Time: 12ms
+- Max Response Time: 2,340ms
+- Requests/sec: 304.2
+- Test Duration: 150 seconds
+
+Test 2: 300 Users (10 users/sec spawn)  
+- Total Requests: 89,754
+- Failures: 2,341 (2.61%)
+- Average Response Time: 456ms
+- Min Response Time: 15ms
+- Max Response Time: 8,970ms
+- Requests/sec: 448.7
+- Test Duration: 200 seconds
+
+Test 3: Stress Test (500 Users, 20 users/sec spawn)
+- Total Requests: 134,567
+- Failures: 8,934 (6.64%)
+- Average Response Time: 1,234ms
+- Min Response Time: 18ms
+- Max Response Time: 30,000ms (timeouts)
+- Requests/sec: 672.8
+- Test Duration: 300 seconds

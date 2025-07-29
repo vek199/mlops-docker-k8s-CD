@@ -10,7 +10,13 @@ from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
+
+from opentelemetry.sdk.trace.sampling import AlwaysOnSampler
+
+# Enhanced OpenTelemetry setup with AlwaysOnSampler
+trace.set_tracer_provider(TracerProvider(
+    sampler=AlwaysOnSampler()  # Captures 100% of traces
+))
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -19,9 +25,21 @@ logger = logging.getLogger(__name__)
 # --- OpenTelemetry Setup ---
 trace.set_tracer_provider(TracerProvider())
 
+# Try to use Cloud Trace exporter, fall back to console exporter for local testing
+try:
+    from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 trace.get_tracer_provider().add_span_processor(
     BatchSpanProcessor(CloudTraceSpanExporter())
 )
+    logger.info("OpenTelemetry configured with Cloud Trace exporter")
+except Exception as e:
+    logger.warning(f"Could not configure Cloud Trace exporter: {e}")
+    # Fall back to console exporter for local testing
+    from opentelemetry.sdk.trace.export import ConsoleSpanExporter
+    trace.get_tracer_provider().add_span_processor(
+        BatchSpanProcessor(ConsoleSpanExporter())
+    )
+    logger.info("OpenTelemetry configured with Console exporter (local testing mode)")
 
 tracer = trace.get_tracer(__name__)
 # --- End of OpenTelemetry Setup ---
@@ -124,12 +142,12 @@ async def predict_species(iris_features: IrisRequest):
             # Data preparation span
             with tracer.start_as_current_span("data_preparation") as data_span:
                 data_start_time = time.time()
-                data = pd.DataFrame([[
-                    iris_features.sepal_length,
-                    iris_features.sepal_width,
-                    iris_features.petal_length,
-                    iris_features.petal_width
-                ]], columns=['sepal_length', 'sepal_width', 'petal_length', 'petal_width'])
+        data = pd.DataFrame([[
+            iris_features.sepal_length,
+            iris_features.sepal_width,
+            iris_features.petal_length,
+            iris_features.petal_width
+        ]], columns=['sepal_length', 'sepal_width', 'petal_length', 'petal_width'])
                 
                 data_prep_time = time.time() - data_start_time
                 data_span.set_attribute("data_preparation.time_seconds", data_prep_time)
@@ -137,10 +155,10 @@ async def predict_species(iris_features: IrisRequest):
             # Model prediction span
             with tracer.start_as_current_span("model_inference") as model_span:
                 model_start_time = time.time()
-                
-                prediction = model.predict(data)
-                probability = model.predict_proba(data).max()
-                
+        
+        prediction = model.predict(data)
+        probability = model.predict_proba(data).max()
+        
                 model_inference_time = time.time() - model_start_time
                 model_span.set_attribute("model.inference_time_seconds", model_inference_time)
                 model_span.set_attribute("model.predicted_species", prediction[0])
@@ -152,9 +170,9 @@ async def predict_species(iris_features: IrisRequest):
             main_span.set_attribute("request.status", "success")
             
             logger.info(f"Prediction completed in {total_request_time:.4f}s - Species: {prediction[0]}")
-            
-            return {
-                "predicted_species": prediction[0],
+       
+    return {
+        "predicted_species": prediction[0],
                 "prediction_probability": round(probability, 4),
                 "inference_time": f"{model_inference_time:.4f}s",
                 "total_time": f"{total_request_time:.4f}s"

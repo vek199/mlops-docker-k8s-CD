@@ -53,10 +53,7 @@ class IrisPredictionAPIUser(HttpUser):
         """Test the prediction endpoint with realistic data and performance monitoring."""
         sample_data = self.generate_iris_data()
         
-        with self.client.post("/predict", 
-                             json=sample_data,
-                             catch_response=True) as response:
-            
+        with self.client.post("/predict", json=sample_data, catch_response=True) as response:
             if response.status_code == 200:
                 try:
                     result = response.json()
